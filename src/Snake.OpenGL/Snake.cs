@@ -19,6 +19,20 @@ namespace SnakeGame
 			Right
 		}
 
+		private struct BodyPart
+		{
+			public BodyPart(Point position, Point destination, Point previousPosition)
+			{
+				Position = position;
+				Destination = destination;
+				PreviousPosition = previousPosition;
+			}
+
+			public Point Position { get; set; }
+			public Point Destination { get; }
+			public Point PreviousPosition { get; }
+		}
+
 		private readonly Point _mapSize;
 		private Texture2D _texture;
 		private SpriteBatch _spriteBatch;
@@ -26,7 +40,7 @@ namespace SnakeGame
 		private bool _isDead;
 		private int _bodyLength;
 		private Vector2 _virtualPosition;
-		private Queue<Point> _bodyPositions = new Queue<Point>();
+		private Queue<BodyPart> _bodyPositions = new Queue<BodyPart>();
 		private SnakeDirection _direction;
 		/// <summary>
 		/// In tiles per second.
@@ -63,7 +77,7 @@ namespace SnakeGame
 			yield return HeadPosition;
 			foreach (var position in _bodyPositions)
 			{
-				yield return position;
+				yield return position.Position;
 			}
 		}
 
@@ -80,37 +94,24 @@ namespace SnakeGame
 				return;
 			}
 
-			var gamePadState = GamePad.GetState(PlayerIndex.One);
+			Steer();
 
-			if (Keyboard.GetState().IsKeyDown(Keys.Left) || gamePadState.IsButtonDown(Buttons.DPadLeft) || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft))
-			{
-				_isMoving = true;
-				_direction = SnakeDirection.Left;
-			}
-			else if (Keyboard.GetState().IsKeyDown(Keys.Right) || gamePadState.IsButtonDown(Buttons.DPadRight) || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))
-			{
-				_isMoving = true;
-				_direction = SnakeDirection.Right;
-			}
-			else if (Keyboard.GetState().IsKeyDown(Keys.Up) || gamePadState.IsButtonDown(Buttons.DPadUp) || gamePadState.IsButtonDown(Buttons.LeftThumbstickUp))
-			{
-				_isMoving = true;
-				_direction = SnakeDirection.Up;
-			}
-			else if (Keyboard.GetState().IsKeyDown(Keys.Down) || gamePadState.IsButtonDown(Buttons.DPadDown) || gamePadState.IsButtonDown(Buttons.LeftThumbstickDown))
-			{
-				_isMoving = true;
-				_direction = SnakeDirection.Down;
-			}
-			
 			if (_isMoving)
 			{
 				_virtualPosition += GetDirectionVector(_direction) * (_speed * Tiles.Size) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+				if (_direction == SnakeDirection.Left || _direction == SnakeDirection.Right)
+				{
+					_virtualPosition.Y = HeadPosition.Y * Tiles.Size + Tiles.Size / 2;
+				}
+				else
+				{
+					_virtualPosition.X = HeadPosition.X * Tiles.Size + Tiles.Size / 2;
+				}
 			}
 			var newPosition = Tiles.ToTilePosition(_virtualPosition);
 			if (newPosition != HeadPosition)
 			{
-				if (_bodyPositions.Any(b => b == newPosition))
+				if (_bodyPositions.Any(b => b.Position == newPosition))
 				{
 					Die();
 					return;
@@ -125,7 +126,14 @@ namespace SnakeGame
 					return;
 				}
 
-				_bodyPositions.Enqueue(HeadPosition);
+				if (_bodyPositions.Count > 0)
+				{
+					_bodyPositions.Enqueue(new BodyPart(HeadPosition, newPosition, _bodyPositions.Last().Position));
+				}
+				else
+				{
+					_bodyPositions.Enqueue(new BodyPart(HeadPosition, newPosition, HeadPosition));
+				}
 				if (_bodyPositions.Count > _bodyLength)
 				{
 					_bodyPositions.Dequeue();
@@ -134,16 +142,64 @@ namespace SnakeGame
 			}
 		}
 
+		private void Steer()
+		{
+			var gamePadState = GamePad.GetState(PlayerIndex.One);
+
+			if (Keyboard.GetState().IsKeyDown(Keys.Left) || gamePadState.IsButtonDown(Buttons.DPadLeft) || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft))
+			{
+				if (_bodyLength == 0 || _direction != SnakeDirection.Right)
+				{
+					_isMoving = true;
+					_direction = SnakeDirection.Left;
+				}
+			}
+			else if (Keyboard.GetState().IsKeyDown(Keys.Right) || gamePadState.IsButtonDown(Buttons.DPadRight) || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))
+			{
+				if (_bodyLength == 0 || _direction != SnakeDirection.Left)
+				{
+					_isMoving = true;
+					_direction = SnakeDirection.Right;
+				}
+			}
+			else if (Keyboard.GetState().IsKeyDown(Keys.Up) || gamePadState.IsButtonDown(Buttons.DPadUp) || gamePadState.IsButtonDown(Buttons.LeftThumbstickUp))
+			{
+				if (_bodyLength == 0 || _direction != SnakeDirection.Down)
+				{
+					_isMoving = true;
+					_direction = SnakeDirection.Up;
+				}
+			}
+			else if (Keyboard.GetState().IsKeyDown(Keys.Down) || gamePadState.IsButtonDown(Buttons.DPadDown) || gamePadState.IsButtonDown(Buttons.LeftThumbstickDown))
+			{
+				if (_bodyLength == 0 || _direction != SnakeDirection.Up)
+				{
+					_isMoving = true;
+					_direction = SnakeDirection.Down;
+				}
+			}
+		}
+
 		public override void Draw(GameTime gameTime)
 		{
 			var headColor = _isDead ? Color.Gray : Color.DarkOrange;
 			var bodyColor = _isDead ? Color.DarkGray : Color.Orange;
 
-			_spriteBatch.Draw(_texture, new Rectangle(HeadPosition.X * Tiles.Size, HeadPosition.Y * Tiles.Size, Tiles.Size, Tiles.Size), headColor);
-			foreach (var position in _bodyPositions)
+			var headDeltaPosition = _virtualPosition - Tiles.ToWorldPosition(HeadPosition);
+			var headDirection = GetDirectionVector(_direction);
+			var dot = Vector2.Dot(headDeltaPosition, headDirection);
+			var headDelta = headDeltaPosition.Length() * Math.Sign(dot);
+
+			foreach (var bodyPart in _bodyPositions)
 			{
-				_spriteBatch.Draw(_texture, new Rectangle(position.X * Tiles.Size, position.Y * Tiles.Size, Tiles.Size, Tiles.Size), bodyColor);
+				var position = bodyPart.Position;
+				var direction = (headDelta < 0 ? bodyPart.Position - bodyPart.PreviousPosition : bodyPart.Destination - position).ToVector2();
+				direction.Normalize();
+				var smoothPosition = Tiles.ToWorldPosition(position) + direction * headDelta;
+				_spriteBatch.Draw(_texture, new Rectangle((int)(smoothPosition.X - Tiles.Size / 2), (int)(smoothPosition.Y - Tiles.Size / 2), Tiles.Size, Tiles.Size), bodyColor);
 			}
+
+			_spriteBatch.Draw(_texture, new Rectangle((int)_virtualPosition.X - Tiles.Size / 2, (int)_virtualPosition.Y - Tiles.Size / 2, Tiles.Size, Tiles.Size), headColor);
 		}
 
 		private static Vector2 GetDirectionVector(SnakeDirection direction)

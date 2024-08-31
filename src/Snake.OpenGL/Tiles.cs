@@ -15,9 +15,12 @@ namespace SnakeGame
 			return new Point((int)position.X / Size, (int)position.Y / Size);
 		}
 
+		/// <summary>
+		/// Converts a tile position to a world position that is placed in the center of the tile.
+		/// </summary>
 		public static Vector2 ToWorldPosition(Point position)
 		{
-			return new Vector2(position.X * Size, position.Y * Size);
+			return new Vector2(position.X * Size + Size / 2, position.Y * Size + Size / 2);
 		}
 	}
 }
