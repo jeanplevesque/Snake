@@ -32,6 +32,13 @@ namespace SnakeGame.OpenGL
 		protected override void Initialize()
 		{
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
+			SetupGame();
+
+			base.Initialize();
+		}
+
+		private void SetupGame()
+		{
 			var snakePosition = new Point(_mapSize.X / 2, _mapSize.Y / 2);
 
 			_snake = new Snake(this, snakePosition, _mapSize);
@@ -39,8 +46,6 @@ namespace SnakeGame.OpenGL
 
 			Components.Add(_food);
 			Components.Add(_snake);
-
-			base.Initialize();
 		}
 
 		protected override void LoadContent()
@@ -50,7 +55,16 @@ namespace SnakeGame.OpenGL
 		protected override void Update(GameTime gameTime)
 		{
 			if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+			{
 				Exit();
+			}
+
+			if (_snake.IsDead && (Keyboard.GetState().IsKeyDown(Keys.Enter) || GamePad.GetState(PlayerIndex.One).IsButtonDown(Buttons.Start)))
+			{
+				Components.Remove(_snake);
+				Components.Remove(_food);
+				SetupGame();
+			}
 
 			if (_snake.HeadPosition == _food.Position)
 			{

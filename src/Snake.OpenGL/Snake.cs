@@ -42,6 +42,8 @@ namespace SnakeGame
 		private Vector2 _virtualPosition;
 		private Queue<BodyPart> _bodyPositions = new Queue<BodyPart>();
 		private SnakeDirection _direction;
+		private SnakeDirection _desiredDirection;
+		private Point _neckPosition;
 		/// <summary>
 		/// In tiles per second.
 		/// </summary>
@@ -53,6 +55,8 @@ namespace SnakeGame
 			_mapSize = mapSize;
 			_virtualPosition = Tiles.ToWorldPosition(HeadPosition);
 		}
+
+		public bool IsDead => _isDead;
 
 		protected override void LoadContent()
 		{
@@ -111,6 +115,7 @@ namespace SnakeGame
 			var newPosition = Tiles.ToTilePosition(_virtualPosition);
 			if (newPosition != HeadPosition)
 			{
+				_neckPosition = HeadPosition;
 				if (_bodyPositions.Any(b => b.Position == newPosition))
 				{
 					Die();
@@ -148,36 +153,56 @@ namespace SnakeGame
 
 			if (Keyboard.GetState().IsKeyDown(Keys.Left) || gamePadState.IsButtonDown(Buttons.DPadLeft) || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft))
 			{
-				if (_bodyLength == 0 || _direction != SnakeDirection.Right)
+				if (_bodyLength == 0 || _neckPosition.Y != HeadPosition.Y)
 				{
-					_isMoving = true;
-					_direction = SnakeDirection.Left;
+					SetDesiredDirection(SnakeDirection.Left);
 				}
 			}
 			else if (Keyboard.GetState().IsKeyDown(Keys.Right) || gamePadState.IsButtonDown(Buttons.DPadRight) || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))
 			{
-				if (_bodyLength == 0 || _direction != SnakeDirection.Left)
+				if (_bodyLength == 0 || _neckPosition.Y != HeadPosition.Y)
 				{
-					_isMoving = true;
-					_direction = SnakeDirection.Right;
+					SetDesiredDirection(SnakeDirection.Right);
 				}
 			}
 			else if (Keyboard.GetState().IsKeyDown(Keys.Up) || gamePadState.IsButtonDown(Buttons.DPadUp) || gamePadState.IsButtonDown(Buttons.LeftThumbstickUp))
 			{
-				if (_bodyLength == 0 || _direction != SnakeDirection.Down)
+				if (_bodyLength == 0 || _neckPosition.X != HeadPosition.X)
 				{
-					_isMoving = true;
-					_direction = SnakeDirection.Up;
+					SetDesiredDirection(SnakeDirection.Up);
 				}
 			}
 			else if (Keyboard.GetState().IsKeyDown(Keys.Down) || gamePadState.IsButtonDown(Buttons.DPadDown) || gamePadState.IsButtonDown(Buttons.LeftThumbstickDown))
 			{
-				if (_bodyLength == 0 || _direction != SnakeDirection.Up)
+				if (_bodyLength == 0 || _neckPosition.X != HeadPosition.X)
 				{
-					_isMoving = true;
-					_direction = SnakeDirection.Down;
+					SetDesiredDirection(SnakeDirection.Down);
 				}
 			}
+
+			var headDeltaPosition = _virtualPosition - Tiles.ToWorldPosition(HeadPosition);
+			var headDirection = GetDirectionVector(_direction);
+			var dot = Vector2.Dot(headDeltaPosition, headDirection);
+			var headDelta = headDeltaPosition.Length() * Math.Sign(dot);
+
+			// Prevent the snake from turning at the wrong time, causing it to move backwards.
+			if (headDelta > 0 && headDelta < Tiles.Size / 8.0)
+			{
+				if (_desiredDirection != _direction)
+				{
+					_direction = _desiredDirection;
+				}
+			}
+		}
+
+		private void SetDesiredDirection(SnakeDirection direction)
+		{
+			if (!_isMoving)
+			{
+				_direction = direction;
+			}
+			_isMoving = true;
+			_desiredDirection = direction;
 		}
 
 		public override void Draw(GameTime gameTime)
