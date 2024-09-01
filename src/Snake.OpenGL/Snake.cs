@@ -207,8 +207,11 @@ namespace SnakeGame
 
 		public override void Draw(GameTime gameTime)
 		{
-			var headColor = _isDead ? Color.Gray : Color.DarkOrange;
-			var bodyColor = _isDead ? Color.DarkGray : Color.Orange;
+			//var headColor = _isDead ? Color.Gray : Color.DarkOrange;
+			//var bodyColor = _isDead ? Color.DarkGray : Color.Orange;
+
+			var headColor = Color.DarkOrange;
+			var bodyColor = Color.Orange;
 
 			var headDeltaPosition = _virtualPosition - Tiles.ToWorldPosition(HeadPosition);
 			var headDirection = GetDirectionVector(_direction);
