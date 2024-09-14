@@ -113,17 +113,17 @@ namespace SnakeGame.OpenGL
 		{
 			GraphicsDevice.Clear(GrayScale(Color.OliveDrab, _deathScreenOpacity));
 
-			_spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, null, _grayScaleEffect, null);
+			_spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, _grayScaleEffect, null);
 			base.Draw(gameTime);
 			_spriteBatch.End();
 
-			_spriteBatch.Begin();
 			if (_snake.IsDead)
 			{
+				_spriteBatch.Begin(sortMode: SpriteSortMode.Deferred);
 				// Draw the death screen in the center of the screen.
 				_spriteBatch.Draw(_deathScreen, new Vector2(_mapSize.X * Tiles.Size / 2, _mapSize.Y * Tiles.Size / 2), null, Color.White * _deathScreenOpacity, 0, new Vector2(_deathScreen.Width / 2, _deathScreen.Height / 2), 1, SpriteEffects.None, 0);
+				_spriteBatch.End();
 			}
-			_spriteBatch.End();
 		}
 
 		private static Color GrayScale(Color color, float percentage)

@@ -33,14 +33,19 @@ namespace SnakeGame
 			public Point PreviousPosition { get; }
 		}
 
+		private const float _textureScale = 8f;
+		private static readonly Random _random = new Random();
+
 		private readonly Point _mapSize;
 		private Texture2D _texture;
+		private Texture2D _skinTexture;
 		private SpriteBatch _spriteBatch;
 		private bool _isMoving;
 		private bool _isDead;
 		private int _bodyLength;
 		private Vector2 _virtualPosition;
 		private Queue<BodyPart> _bodyPositions = new Queue<BodyPart>();
+		private List<Rectangle> _skinSamples = new List<Rectangle>();
 		private SnakeDirection _direction;
 		private SnakeDirection _desiredDirection;
 		private Point _neckPosition;
@@ -61,6 +66,7 @@ namespace SnakeGame
 		protected override void LoadContent()
 		{
 			_texture = Game.Content.Load<Texture2D>("Circle");
+			_skinTexture = Game.Content.Load<Texture2D>("snake-skin");
 			_spriteBatch = ((Game1)Game).SpriteBatch;
 		}
 
@@ -72,6 +78,13 @@ namespace SnakeGame
 		public void Eat()
 		{
 			++_bodyLength;
+			var size = (int)Math.Ceiling(Tiles.Size * _textureScale);
+			_skinSamples.Add(new Rectangle(
+				_random.Next(_skinTexture.Width - size),
+				_random.Next(_skinTexture.Height - size),
+				size,
+				size
+			));
 			_speed += 0.3f;
 			_speed = Math.Min(_speed, 6);
 		}
@@ -218,13 +231,26 @@ namespace SnakeGame
 			var dot = Vector2.Dot(headDeltaPosition, headDirection);
 			var headDelta = headDeltaPosition.Length() * Math.Sign(dot);
 
+			int i = _bodyPositions.Count - 1;
 			foreach (var bodyPart in _bodyPositions)
 			{
 				var position = bodyPart.Position;
-				var direction = (headDelta < 0 ? bodyPart.Position - bodyPart.PreviousPosition : bodyPart.Destination - position).ToVector2();
+				var direction = (headDelta < 0 ? position - bodyPart.PreviousPosition : bodyPart.Destination - position).ToVector2();
 				direction.Normalize();
 				var smoothPosition = Tiles.ToWorldPosition(position) + direction * headDelta;
-				_spriteBatch.Draw(_texture, new Rectangle((int)(smoothPosition.X - Tiles.Size / 2), (int)(smoothPosition.Y - Tiles.Size / 2), Tiles.Size, Tiles.Size), bodyColor);
+				//_spriteBatch.Draw(_texture, new Rectangle((int)(smoothPosition.X - Tiles.Size / 2), (int)(smoothPosition.Y - Tiles.Size / 2), Tiles.Size, Tiles.Size), bodyColor);
+				var angle =  MathF.Atan2(direction.Y, direction.X);
+				_spriteBatch.Draw(
+					texture: _skinTexture,
+					position: smoothPosition,
+					sourceRectangle: _skinSamples[i],
+					color: Color.White,
+					rotation: angle,
+					scale: 1 / _textureScale,
+					origin: Vector2.One * 0.5f * Tiles.Size * _textureScale,
+					effects: SpriteEffects.None,
+					layerDepth: 0);
+				--i;
 			}
 
 			_spriteBatch.Draw(_texture, new Rectangle((int)_virtualPosition.X - Tiles.Size / 2, (int)_virtualPosition.Y - Tiles.Size / 2, Tiles.Size, Tiles.Size), headColor);
