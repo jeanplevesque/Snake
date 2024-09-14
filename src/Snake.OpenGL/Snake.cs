@@ -49,6 +49,7 @@ namespace SnakeGame
 		private SnakeDirection _direction;
 		private SnakeDirection _desiredDirection;
 		private Point _neckPosition;
+		private Point _skinTextureMaxIndices;
 		/// <summary>
 		/// In tiles per second.
 		/// </summary>
@@ -65,9 +66,30 @@ namespace SnakeGame
 
 		protected override void LoadContent()
 		{
-			_texture = Game.Content.Load<Texture2D>("Circle");
-			_skinTexture = Game.Content.Load<Texture2D>("snake-skin");
+			var maskTexture = _texture = Game.Content.Load<Texture2D>("Circle");
+			var skinTexture = Game.Content.Load<Texture2D>("snake-skin");
 			_spriteBatch = ((Game1)Game).SpriteBatch;
+
+			// Use the circle texture to mask the skin texture in tiles.
+			_skinTexture = new Texture2D(GraphicsDevice, skinTexture.Width, skinTexture.Height);
+			var skinColors = new Color[skinTexture.Width * skinTexture.Height];
+			var maskColors = new Color[maskTexture.Width * maskTexture.Height];
+			skinTexture.GetData<Color>(skinColors);
+			maskTexture.GetData<Color>(maskColors);
+			var tileSize = (int)Math.Ceiling(Tiles.Size * _textureScale);
+			for (int i = 0; i < skinColors.Length; ++i)
+			{
+				var skinPixelPosition = new Point(i % skinTexture.Width, i / skinTexture.Width);
+				var skinTileIndex = new Point(skinPixelPosition.X / tileSize, skinPixelPosition.Y / tileSize);
+				var skinRelativePixelPosition = new Point(skinPixelPosition.X % tileSize, skinPixelPosition.Y % tileSize);
+				var tileUV = new Vector2(skinRelativePixelPosition.X / (float)tileSize, skinRelativePixelPosition.Y / (float)tileSize);
+
+				var maskPixelPosition = tileUV * new Vector2(maskTexture.Width, maskTexture.Height);
+				var maskPixel = maskColors[(int)maskPixelPosition.Y * maskTexture.Width + (int)maskPixelPosition.X];
+				skinColors[i] = skinColors[i] * (maskPixel.A / 256f);
+			}
+			_skinTexture.SetData(skinColors);
+			_skinTextureMaxIndices = new Point(skinTexture.Width / tileSize, skinTexture.Height / tileSize);
 		}
 
 		/// <summary>
@@ -80,8 +102,8 @@ namespace SnakeGame
 			++_bodyLength;
 			var size = (int)Math.Ceiling(Tiles.Size * _textureScale);
 			_skinSamples.Add(new Rectangle(
-				_random.Next(_skinTexture.Width - size),
-				_random.Next(_skinTexture.Height - size),
+				_random.Next(_skinTextureMaxIndices.X) * size,
+				_random.Next(_skinTextureMaxIndices.Y) * size,
 				size,
 				size
 			));
@@ -235,11 +257,15 @@ namespace SnakeGame
 			foreach (var bodyPart in _bodyPositions)
 			{
 				var position = bodyPart.Position;
-				var direction = (headDelta < 0 ? position - bodyPart.PreviousPosition : bodyPart.Destination - position).ToVector2();
-				direction.Normalize();
+				var direction1 = (position - bodyPart.PreviousPosition).ToVector2();
+				var direction2 = (bodyPart.Destination - position).ToVector2();
+				direction1.Normalize();
+				direction2.Normalize();
+				var direction = headDelta < 0 ? direction1 : direction2;
 				var smoothPosition = Tiles.ToWorldPosition(position) + direction * headDelta;
 				//_spriteBatch.Draw(_texture, new Rectangle((int)(smoothPosition.X - Tiles.Size / 2), (int)(smoothPosition.Y - Tiles.Size / 2), Tiles.Size, Tiles.Size), bodyColor);
-				var angle =  MathF.Atan2(direction.Y, direction.X);
+				var textureDirection = Vector2.Lerp(direction1, direction2, headDelta / Tiles.Size + 0.5f);
+				var angle = MathF.Atan2(textureDirection.Y, textureDirection.X);
 				_spriteBatch.Draw(
 					texture: _skinTexture,
 					position: smoothPosition,
@@ -254,6 +280,9 @@ namespace SnakeGame
 			}
 
 			_spriteBatch.Draw(_texture, new Rectangle((int)_virtualPosition.X - Tiles.Size / 2, (int)_virtualPosition.Y - Tiles.Size / 2, Tiles.Size, Tiles.Size), headColor);
+
+			// Uncomment to show the tiled masked snake skin atlas.
+			//_spriteBatch.Draw(_skinTexture, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1 / 4f, SpriteEffects.None, 0);
 		}
 
 		private static Vector2 GetDirectionVector(SnakeDirection direction)
