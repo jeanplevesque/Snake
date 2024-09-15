@@ -47,8 +47,8 @@ namespace SnakeGame
 		private Vector2 _virtualPosition;
 		private Queue<BodyPart> _bodyPositions = new Queue<BodyPart>();
 		private List<Rectangle> _skinSamples = new List<Rectangle>();
-		private SnakeDirection _direction;
-		private SnakeDirection _desiredDirection;
+		private SnakeDirection _direction = SnakeDirection.Right;
+		private SnakeDirection _desiredDirection = SnakeDirection.Right;
 		private Point _neckPosition;
 		private Point _skinTextureMaxIndices;
 		/// <summary>

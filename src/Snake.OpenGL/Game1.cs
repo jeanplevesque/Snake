@@ -21,6 +21,7 @@ namespace SnakeGame.OpenGL
 		private SoundEffect _deathScreenSound;
 		private bool _isDeathSoundPlaying;
 		private Effect _grayScaleEffect;
+		private Texture2D _grassTexture;
 
 		public Game1()
 		{
@@ -57,6 +58,7 @@ namespace SnakeGame.OpenGL
 
 		protected override void LoadContent()
 		{
+			_grassTexture = Content.Load<Texture2D>("grass");
 			_deathScreen = Content.Load<Texture2D>("you-died");
 			_deathScreenSound = Content.Load<SoundEffect>("you-died-sound");
 			_grayScaleEffect = Content.Load<Effect>("Gray-Scale");
@@ -111,9 +113,10 @@ namespace SnakeGame.OpenGL
 
 		protected override void Draw(GameTime gameTime)
 		{
-			GraphicsDevice.Clear(GrayScale(Color.OliveDrab, _deathScreenOpacity));
+			//GraphicsDevice.Clear(GrayScale(Color.OliveDrab, _deathScreenOpacity));
 
 			_spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, _grayScaleEffect, null);
+			_spriteBatch.Draw(_grassTexture, Vector2.UnitX * -200, null, Color.White, rotation: 0f, origin: Vector2.Zero, scale: 0.2f, effects: SpriteEffects.None, layerDepth: 0);
 			base.Draw(gameTime);
 			_spriteBatch.End();
 
