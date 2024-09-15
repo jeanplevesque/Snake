@@ -33,12 +33,13 @@ namespace SnakeGame
 			public Point PreviousPosition { get; }
 		}
 
-		private const float _textureScale = 8f;
+		private const float _textureScale = 12f;
 		private static readonly Random _random = new Random();
 
 		private readonly Point _mapSize;
 		private Texture2D _texture;
 		private Texture2D _skinTexture;
+		private Texture2D _headTexture;
 		private SpriteBatch _spriteBatch;
 		private bool _isMoving;
 		private bool _isDead;
@@ -68,6 +69,7 @@ namespace SnakeGame
 		{
 			var maskTexture = _texture = Game.Content.Load<Texture2D>("Circle");
 			var skinTexture = Game.Content.Load<Texture2D>("snake-skin");
+			_headTexture = Game.Content.Load<Texture2D>("snake-head");
 			_spriteBatch = ((Game1)Game).SpriteBatch;
 
 			// Use the circle texture to mask the skin texture in tiles.
@@ -279,7 +281,20 @@ namespace SnakeGame
 				--i;
 			}
 
-			_spriteBatch.Draw(_texture, new Rectangle((int)_virtualPosition.X - Tiles.Size / 2, (int)_virtualPosition.Y - Tiles.Size / 2, Tiles.Size, Tiles.Size), headColor);
+			//_spriteBatch.Draw(_texture, new Rectangle((int)_virtualPosition.X - Tiles.Size / 2, (int)_virtualPosition.Y - Tiles.Size / 2, Tiles.Size, Tiles.Size), headColor);
+			var desiredDirection = GetDirectionVector(_desiredDirection);
+			var headTextureDirection = _desiredDirection != _direction ? desiredDirection + headDirection : headDirection;
+			var headTextureAngle = MathF.Atan2(headTextureDirection.Y, headTextureDirection.X) - MathHelper.Pi;
+			_spriteBatch.Draw(
+				texture: _headTexture,
+				position: _virtualPosition,
+				sourceRectangle: null,
+				color: Color.White,
+				rotation: headTextureAngle,
+				scale: Tiles.Size / (float)_headTexture.Width * 1.25f,
+				origin: Vector2.One * 0.5f * _headTexture.Width,
+				effects: SpriteEffects.None,
+				layerDepth: 0);
 
 			// Uncomment to show the tiled masked snake skin atlas.
 			//_spriteBatch.Draw(_skinTexture, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1 / 4f, SpriteEffects.None, 0);
