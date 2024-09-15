@@ -25,6 +25,36 @@
 /processorParam:TextureFormat=Color
 /build:apple.png
 
+#begin bite0.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:bite0.wav
+
+#begin bite1.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:bite1.wav
+
+#begin bite2.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:bite2.wav
+
+#begin bite3.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:bite3.wav
+
+#begin bite4.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:bite4.wav
+
 #begin Circle.png
 /importer:TextureImporter
 /processor:TextureProcessor

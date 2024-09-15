@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SnakeGame.OpenGL;
 using System;
@@ -51,6 +52,7 @@ namespace SnakeGame
 		private SnakeDirection _desiredDirection = SnakeDirection.Right;
 		private Point _neckPosition;
 		private Point _skinTextureMaxIndices;
+		private List<SoundEffect> _biteSoundEffects = [];
 		/// <summary>
 		/// In tiles per second.
 		/// </summary>
@@ -92,6 +94,11 @@ namespace SnakeGame
 			}
 			_skinTexture.SetData(skinColors);
 			_skinTextureMaxIndices = new Point(skinTexture.Width / tileSize, skinTexture.Height / tileSize);
+
+			for (int i = 0; i < 5; ++i)
+			{
+				_biteSoundEffects.Add(Game.Content.Load<SoundEffect>($"bite{i}"));
+			}
 		}
 
 		/// <summary>
@@ -111,6 +118,10 @@ namespace SnakeGame
 			));
 			_speed += 0.3f;
 			_speed = Math.Min(_speed, 6);
+			var soundEffect = _biteSoundEffects[_random.Next(_biteSoundEffects.Count)];
+			var soundInstance = soundEffect.CreateInstance();
+			soundInstance.Volume = 0.8f;
+			soundInstance.Play();
 		}
 
 		public IEnumerable<Point> GetAllPositionsOccupied()

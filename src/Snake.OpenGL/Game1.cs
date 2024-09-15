@@ -77,7 +77,7 @@ namespace SnakeGame.OpenGL
 				if (!_isDeathSoundPlaying)
 				{
 					var sound = _deathScreenSound.CreateInstance();
-					sound.Volume = 0.3f;
+					sound.Volume = 0.5f;
 					sound.Play();
 					_isDeathSoundPlaying = true;
 				}
@@ -116,7 +116,7 @@ namespace SnakeGame.OpenGL
 			//GraphicsDevice.Clear(GrayScale(Color.OliveDrab, _deathScreenOpacity));
 
 			_spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, _grayScaleEffect, null);
-			_spriteBatch.Draw(_grassTexture, Vector2.UnitX * -200, null, Color.White, rotation: 0f, origin: Vector2.Zero, scale: 0.2f, effects: SpriteEffects.None, layerDepth: 0);
+			_spriteBatch.Draw(_grassTexture, Vector2.UnitX * -200, null, new Color(Vector3.One * 0.8f), rotation: 0f, origin: Vector2.Zero, scale: 0.2f, effects: SpriteEffects.None, layerDepth: 0);
 			base.Draw(gameTime);
 			_spriteBatch.End();
 
