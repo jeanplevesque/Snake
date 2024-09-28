@@ -124,10 +124,10 @@ namespace SnakeGame.OpenGL
 			if (!_snake.IsDead)
 			{
 				const float scale = 0.75f;
-				var scoreText = $"score: {_snake.Length * 100}";
+				var scoreText = $"score: {_snake.Length}";
 				var scoreSize = _font.MeasureString(scoreText) * scale;
-				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size - scoreSize - Vector2.One * 7, Color.Black * 0.95f, 0, Vector2.Zero, Vector2.One * scale, SpriteEffects.None, 0, false);
-				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size - scoreSize - Vector2.One * 8, Color.White * 0.95f, 0, Vector2.Zero, Vector2.One * scale, SpriteEffects.None, 0, false);
+				_spriteBatch.DrawString(_font, scoreText, (_mapSize.ToVector2() * Tiles.Size - scoreSize - Vector2.One * 7).ToPoint().ToVector2(), Color.Black * 0.95f, 0, Vector2.Zero, Vector2.One * scale, SpriteEffects.None, 0, false);
+				_spriteBatch.DrawString(_font, scoreText, (_mapSize.ToVector2() * Tiles.Size - scoreSize - Vector2.One * 8).ToPoint().ToVector2(), Color.White * 0.95f, 0, Vector2.Zero, Vector2.One * scale, SpriteEffects.None, 0, false);
 			}
 			_spriteBatch.End();
 
@@ -136,11 +136,19 @@ namespace SnakeGame.OpenGL
 				_spriteBatch.Begin(sortMode: SpriteSortMode.Deferred);
 				// Draw the death screen in the center of the screen.
 				_spriteBatch.Draw(_deathScreen, new Vector2(_mapSize.X * Tiles.Size / 2, _mapSize.Y * Tiles.Size / 2), null, Color.White * _deathScreenOpacity, 0, new Vector2(_deathScreen.Width / 2, _deathScreen.Height / 2), 1, SpriteEffects.None, 0);
+
 				// Draw the final score.
-				var scoreText = $"final score: {_snake.Length * 100}";
+				var scoreText = $"final score: {_snake.Length}";
 				var scoreSize = _font.MeasureString(scoreText);
-				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size / 2 - scoreSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.25f + Vector2.One, Color.Black * _deathScreenOpacity);
-				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size / 2 - scoreSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.25f, Color.White * _deathScreenOpacity);
+				_spriteBatch.DrawString(_font, scoreText, (_mapSize.ToVector2() * Tiles.Size / 2 - scoreSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.25f + Vector2.One).ToPoint().ToVector2(), Color.Black * _deathScreenOpacity);
+				_spriteBatch.DrawString(_font, scoreText, (_mapSize.ToVector2() * Tiles.Size / 2 - scoreSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.25f).ToPoint().ToVector2(), Color.White * _deathScreenOpacity);
+
+				// Draw the restart text.
+				const float restartScale = 0.75f;
+				var restartText = "Press Enter to restart.";
+				var restartSize = _font.MeasureString(restartText) * restartScale;
+				_spriteBatch.DrawString(_font, restartText, (_mapSize.ToVector2() * Tiles.Size / 2 - restartSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.35f + Vector2.One).ToPoint().ToVector2(), Color.Black * _deathScreenOpacity, 0, Vector2.Zero, Vector2.One * restartScale, SpriteEffects.None, 0, false);
+				_spriteBatch.DrawString(_font, restartText, (_mapSize.ToVector2() * Tiles.Size / 2 - restartSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.35f).ToPoint().ToVector2(), Color.White * _deathScreenOpacity, 0, Vector2.Zero, Vector2.One * restartScale, SpriteEffects.None, 0, false);
 				_spriteBatch.End();
 			}
 		}
