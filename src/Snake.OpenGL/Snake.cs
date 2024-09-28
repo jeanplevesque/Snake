@@ -67,6 +67,8 @@ namespace SnakeGame
 
 		public bool IsDead => _isDead;
 
+		public int Length => _bodyLength;
+
 		protected override void LoadContent()
 		{
 			var maskTexture = _texture = Game.Content.Load<Texture2D>("Circle");

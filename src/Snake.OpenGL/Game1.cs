@@ -22,6 +22,7 @@ namespace SnakeGame.OpenGL
 		private bool _isDeathSoundPlaying;
 		private Effect _grayScaleEffect;
 		private Texture2D _grassTexture;
+		private SpriteFont _font;
 
 		public Game1()
 		{
@@ -63,6 +64,7 @@ namespace SnakeGame.OpenGL
 			_deathScreenSound = Content.Load<SoundEffect>("you-died-sound");
 			_grayScaleEffect = Content.Load<Effect>("Gray-Scale");
 			_grayScaleEffect.CurrentTechnique = _grayScaleEffect.Techniques["BasicColorDrawing"];
+			_font = Content.Load<SpriteFont>("font");
 		}
 
 		protected override void Update(GameTime gameTime)
@@ -118,6 +120,15 @@ namespace SnakeGame.OpenGL
 			_spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, _grayScaleEffect, null);
 			_spriteBatch.Draw(_grassTexture, Vector2.UnitX * -200, null, new Color(Vector3.One * 0.8f), rotation: 0f, origin: Vector2.Zero, scale: 0.2f, effects: SpriteEffects.None, layerDepth: 0);
 			base.Draw(gameTime);
+			// Draw the score.
+			if (!_snake.IsDead)
+			{
+				const float scale = 0.75f;
+				var scoreText = $"score: {_snake.Length * 100}";
+				var scoreSize = _font.MeasureString(scoreText) * scale;
+				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size - scoreSize - Vector2.One * 7, Color.Black * 0.95f, 0, Vector2.Zero, Vector2.One * scale, SpriteEffects.None, 0, false);
+				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size - scoreSize - Vector2.One * 8, Color.White * 0.95f, 0, Vector2.Zero, Vector2.One * scale, SpriteEffects.None, 0, false);
+			}
 			_spriteBatch.End();
 
 			if (_snake.IsDead)
@@ -125,6 +136,11 @@ namespace SnakeGame.OpenGL
 				_spriteBatch.Begin(sortMode: SpriteSortMode.Deferred);
 				// Draw the death screen in the center of the screen.
 				_spriteBatch.Draw(_deathScreen, new Vector2(_mapSize.X * Tiles.Size / 2, _mapSize.Y * Tiles.Size / 2), null, Color.White * _deathScreenOpacity, 0, new Vector2(_deathScreen.Width / 2, _deathScreen.Height / 2), 1, SpriteEffects.None, 0);
+				// Draw the final score.
+				var scoreText = $"final score: {_snake.Length * 100}";
+				var scoreSize = _font.MeasureString(scoreText);
+				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size / 2 - scoreSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.25f + Vector2.One, Color.Black * _deathScreenOpacity);
+				_spriteBatch.DrawString(_font, scoreText, _mapSize.ToVector2() * Tiles.Size / 2 - scoreSize / 2 + Vector2.UnitY * _mapSize.Y * Tiles.Size * 0.25f, Color.White * _deathScreenOpacity);
 				_spriteBatch.End();
 			}
 		}
