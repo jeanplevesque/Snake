@@ -8,7 +8,7 @@ namespace SnakeGame
 {
 	public static class Tiles
 	{
-		public const int Size = 48;
+		public const int Size = 56;
 
 		public static Point ToTilePosition(Vector2 position)
 		{
