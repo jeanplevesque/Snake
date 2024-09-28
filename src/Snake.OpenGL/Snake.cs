@@ -118,7 +118,7 @@ namespace SnakeGame
 				size,
 				size
 			));
-			_speed += 0.3f;
+			_speed += 0.15f;
 			_speed = Math.Min(_speed, 6);
 			var soundEffect = _biteSoundEffects[_random.Next(_biteSoundEffects.Count)];
 			var soundInstance = soundEffect.CreateInstance();
@@ -162,20 +162,21 @@ namespace SnakeGame
 					_virtualPosition.X = HeadPosition.X * Tiles.Size + Tiles.Size / 2;
 				}
 			}
+
+			if (_virtualPosition.X < 0 ||
+				_virtualPosition.Y < 0 ||
+				_virtualPosition.X >= _mapSize.X * Tiles.Size ||
+				_virtualPosition.Y >= _mapSize.Y * Tiles.Size)
+			{
+				Die();
+				return;
+			}
+
 			var newPosition = Tiles.ToTilePosition(_virtualPosition);
 			if (newPosition != HeadPosition)
 			{
 				_neckPosition = HeadPosition;
 				if (_bodyPositions.Any(b => b.Position == newPosition))
-				{
-					Die();
-					return;
-				}
-
-				if (newPosition.X < 0 ||
-					newPosition.Y < 0 ||
-					newPosition.X >= _mapSize.X ||
-					newPosition.Y >= _mapSize.Y)
 				{
 					Die();
 					return;
@@ -255,6 +256,9 @@ namespace SnakeGame
 			_desiredDirection = direction;
 		}
 
+		private float _desiredHeadAngle;
+		private float _headAngle;
+
 		public override void Draw(GameTime gameTime)
 		{
 			//var headColor = _isDead ? Color.Gray : Color.DarkOrange;
@@ -297,13 +301,20 @@ namespace SnakeGame
 			//_spriteBatch.Draw(_texture, new Rectangle((int)_virtualPosition.X - Tiles.Size / 2, (int)_virtualPosition.Y - Tiles.Size / 2, Tiles.Size, Tiles.Size), headColor);
 			var desiredDirection = GetDirectionVector(_desiredDirection);
 			var headTextureDirection = _desiredDirection != _direction ? desiredDirection + headDirection : headDirection;
-			var headTextureAngle = MathF.Atan2(headTextureDirection.Y, headTextureDirection.X) - MathHelper.Pi;
+			_desiredHeadAngle = MathF.Atan2(headTextureDirection.Y, headTextureDirection.X) - MathHelper.Pi;
+			// Adjust _headAngle by factors of TwoPi to avoid spinning the head in the wrong direction.
+			while (Math.Abs(_desiredHeadAngle - _headAngle) > MathF.PI)
+			{
+				_headAngle += MathF.Sign(_desiredHeadAngle - _headAngle) * MathHelper.TwoPi;
+			}
+
+			_headAngle = MathHelper.Lerp(_headAngle, _desiredHeadAngle, 0.2f);
 			_spriteBatch.Draw(
 				texture: _headTexture,
 				position: _virtualPosition,
 				sourceRectangle: null,
 				color: Color.White,
-				rotation: headTextureAngle,
+				rotation: _headAngle,
 				scale: Tiles.Size / (float)_headTexture.Width * 1.25f,
 				origin: Vector2.One * 0.5f * _headTexture.Width,
 				effects: SpriteEffects.None,
